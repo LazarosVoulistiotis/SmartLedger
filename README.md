@@ -157,10 +157,3 @@ It aligns with the coursework goals of system design, Android implementation, ba
 **Lazaros Voulistiotis**
 
 ---
-
-If you would like, I can also prepare a more polished version of this README with:
-- badges
-- screenshots section
-- demo GIF/video section
-- installation notes for examiners
-- portfolio-style formatting
