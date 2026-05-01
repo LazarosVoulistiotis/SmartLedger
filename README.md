@@ -1,8 +1,22 @@
 # SmartLedger
 
-SmartLedger is an Android FinTech application prototype for secure personal expense tracking, group bill splitting, and cloud-backed data management. The project was originally developed for **CN6008 – Advanced Topics in Computer Science (CW1)** using **Kotlin**, **Jetpack Compose**, **Firebase Authentication**, and **Cloud Firestore**.
+SmartLedger is an Android FinTech application prototype for secure personal expense tracking, group bill splitting, cloud-backed data management, and offline expense availability. The project was originally developed for **CN6008 – Advanced Topics in Computer Science (CW1)** using **Kotlin**, **Jetpack Compose**, **Firebase Authentication**, and **Cloud Firestore**.
 
-The project is now being extended for **CN6008 CW2 – Final App & Testing**, where the existing prototype will be evolved into a more complete mobile application with advanced Android features, structured testing evidence, and documented group contribution.
+The project is now being extended for **CN6008 CW2 – Final App & Testing**, where the existing prototype is being evolved into a more complete mobile application with advanced Android features, structured testing evidence, and documented group contribution.
+
+---
+
+## Current CW2 Status
+
+| Area | Status | Notes |
+|---|---:|---|
+| CW1 baseline app | ✅ Completed | Firebase login, expense tracking, history, and group split workflow are available. |
+| CW2 Day 1 setup | ✅ Completed | CW2 documentation folders, test plan skeleton, contribution matrix, Jira board, and setup evidence were prepared. |
+| Room / SQLite local storage | ✅ Completed | Expenses are saved locally through Room and then synced to Firestore when available. |
+| Unit testing | ✅ Completed for Day 2 | `SplitCalculationUseCaseTest` validates equal split calculation and invalid zero-member input. |
+| Biometric authentication | Planned | Assigned to Γιάννης for CW2. |
+| Retrofit external API | Planned | Assigned to Ιάσωνας for CW2. |
+| Final integration, report, and viva | Planned | To be completed after all technology integrations are merged. |
 
 ---
 
@@ -12,13 +26,15 @@ SmartLedger supports a simple but structured expense-management workflow:
 
 - user registration and login
 - personal expense creation and storage
+- local Room storage for offline expense availability
+- cloud synchronisation through Firestore
 - expense history retrieval
 - group creation with equal bill splitting
-- cloud-backed persistence through Firebase
+- testing evidence for build, unit tests, and feature validation
 
-The current implementation follows a layered Android structure with **Compose UI screens**, **ViewModels**, **repositories**, and a small **domain/use case** layer for split calculation.
+The current implementation follows a layered Android structure with **Compose UI screens**, **ViewModels**, **repositories**, **Room local data access**, **Firebase services**, and a small **domain/use case** layer for split calculation.
 
-The CW2 phase extends this foundation without rebuilding the application from scratch. The goal is to keep the existing architecture stable while adding selected advanced technologies and stronger testing documentation.
+The CW2 phase extends the CW1 foundation without rebuilding the application from scratch. The goal is to keep the architecture stable while adding selected advanced technologies and stronger testing documentation.
 
 ---
 
@@ -36,14 +52,57 @@ The CW2 phase extends this foundation without rebuilding the application from sc
 - **Repository-based data access** to keep UI code separate from Firebase logic
 - **SplitCalculationUseCase** for isolated equal-split business logic
 
-### CW2 Planned Extensions
+### Implemented CW2 Features
 
-The CW2 implementation will extend the current prototype with:
+#### Room / SQLite Local Storage — Completed
 
-- **Room / SQLite Local Storage** for offline expense access
+SmartLedger now includes Room local database support inside the `data/local` package. The Room implementation provides offline-first expense persistence:
+
+```text
+Add Expense
+→ save to Room first
+→ attempt Firestore save
+→ update UI feedback based on sync result
+```
+
+Implemented files:
+
+```text
+app/src/main/java/com/smartledger/data/local/
+├── SmartLedgerDatabase.kt
+├── dao/
+│   └── ExpenseDao.kt
+├── entity/
+│   └── ExpenseEntity.kt
+└── mapper/
+    └── ExpenseMappers.kt
+```
+
+Updated files:
+
+```text
+app/src/main/java/com/smartledger/data/repository/ExpenseRepository.kt
+app/src/main/java/com/smartledger/ui/viewmodel/ExpenseViewModel.kt
+app/src/main/java/com/smartledger/ui/viewmodel/ExpenseUiState.kt
+app/src/main/java/com/smartledger/ui/screens/expense/AddExpenseScreen.kt
+app/src/main/java/com/smartledger/ui/screens/history/HistoryScreen.kt
+```
+
+User feedback messages include:
+
+```text
+Expense saved locally and synced to cloud.
+Expense saved locally. Sync will be attempted when online.
+Showing saved expenses from local storage when cloud data is unavailable.
+```
+
+### Remaining CW2 Planned Extensions
+
+The next CW2 implementation steps will add:
+
 - **Biometric Authentication** as an additional local security layer
 - **Retrofit External API Integration** for live financial or currency data
-- **Testing Strategy** with functional test cases, expected vs actual results, screenshots, and selected unit tests
+- **Final Testing Strategy** with functional test cases, expected vs actual results, screenshots, and selected unit tests
 - **Contribution Matrix** to document each team member’s implementation responsibility
 - **Viva preparation evidence** for code defense and live demo support
 
@@ -51,14 +110,15 @@ The CW2 implementation will extend the current prototype with:
 
 ## Current Prototype Limitations
 
-The current baseline has the following known limitations before CW2 feature development:
+The current CW2 state has the following known limitations:
 
 - Group members are currently entered as names in a comma-separated input rather than selected from real registered user accounts.
 - The split logic currently stores the entered participant names, but not full multi-user settlement logic for all participants.
-- Offline persistence is not implemented yet and will be added through Room during CW2.
+- Room local storage has been implemented for expenses, but a production-grade background sync engine, such as WorkManager-based retry synchronisation, is outside the current Day 2 scope.
 - Biometric authentication is not implemented yet and will be added during CW2.
 - External API integration is not implemented yet and will be added through Retrofit during CW2.
-- Dependency injection and automated testing are still minimal.
+- Dependency injection is still minimal to avoid unnecessary refactoring during coursework implementation.
+- Automated testing currently includes selected unit testing; broader UI and integration tests are planned for final testing.
 
 ---
 
@@ -68,17 +128,26 @@ SmartLedger uses a lightweight layered Android architecture:
 
 - **UI Layer:** Jetpack Compose screens and navigation
 - **Presentation Layer:** `AuthViewModel`, `ExpenseViewModel`, `GroupViewModel`, and related `UiState` classes
-- **Data Layer:** `AuthRepository`, `ExpenseRepository`, `GroupRepository`
+- **Data Layer:** `AuthRepository`, `ExpenseRepository`, `GroupRepository`, Room DAO, and Firebase data access
 - **Domain Layer:** `SplitCalculationUseCase`
 - **Backend:** Firebase Authentication and Cloud Firestore
+- **Local Storage:** Room / SQLite for offline expense availability
 
-The design supports separation of concerns by keeping UI, state management, business logic, and data access in separate layers.
+The design supports separation of concerns by keeping UI, state management, business logic, local database access, and cloud data access in separate layers.
 
-### Current Project Structure
+### Current Project Structure After Room Integration
 
 ```text
 app/src/main/java/com/smartledger/
 ├── data/
+│   ├── local/
+│   │   ├── SmartLedgerDatabase.kt
+│   │   ├── dao/
+│   │   │   └── ExpenseDao.kt
+│   │   ├── entity/
+│   │   │   └── ExpenseEntity.kt
+│   │   └── mapper/
+│   │       └── ExpenseMappers.kt
 │   ├── model/
 │   ├── remote/
 │   └── repository/
@@ -108,26 +177,19 @@ app/src/main/java/com/smartledger/
 └── MainActivity.kt
 ```
 
-### Target CW2 Extension Structure
+### Target Final CW2 Extension Structure
 
 ```text
 app/src/main/java/com/smartledger/
 ├── data/
-│   ├── local/                         # Room / SQLite local storage
-│   │   ├── SmartLedgerDatabase.kt
-│   │   ├── dao/
-│   │   │   └── ExpenseDao.kt
-│   │   ├── entity/
-│   │   │   └── ExpenseEntity.kt
-│   │   └── mapper/
-│   │       └── ExpenseMappers.kt
-│   ├── remote/                        # Retrofit external API integration
+│   ├── local/                         # Completed: Room / SQLite local storage
+│   ├── remote/                        # Planned: Retrofit external API integration
 │   │   ├── api/
 │   │   │   └── CurrencyApiService.kt
 │   │   ├── dto/
 │   │   │   └── CurrencyRatesResponse.kt
 │   │   └── RetrofitClient.kt
-│   ├── security/                      # Biometric authentication
+│   ├── security/                      # Planned: Biometric authentication
 │   │   └── BiometricAuthManager.kt
 │   └── repository/
 │       ├── ExpenseRepository
@@ -150,11 +212,12 @@ app/src/main/java/com/smartledger/
 - **Navigation:** Navigation Compose
 - **Architecture:** MVVM-style separation with repositories and use cases
 - **Backend / Cloud:** Firebase Authentication, Cloud Firestore
-- **Local Storage:** Room / SQLite planned for CW2
+- **Local Storage:** Room / SQLite for offline expense persistence
 - **Security:** AndroidX Biometric planned for CW2
 - **Networking:** Retrofit planned for CW2 external API integration
 - **Asynchronous operations:** Kotlin Coroutines
 - **Build system:** Gradle Kotlin DSL
+- **Annotation processing:** KSP for Room compiler
 - **Project Management:** Jira Kanban board
 - **Testing:** Functional testing, black-box testing, user acceptance testing, and selected unit tests
 
@@ -171,7 +234,16 @@ The current app flow is:
 5. **Expense History**
 6. **Group / Split**
 
-The intended CW2 demo flow is:
+The current Room-enhanced expense flow is:
+
+1. User opens **Add Expense**.
+2. User enters title, amount, category, date, and optional description.
+3. App saves the expense locally through Room.
+4. App attempts to sync the same expense to Firestore.
+5. UI displays whether the expense was saved locally and synced to cloud, or saved locally for later sync.
+6. User opens **Expense History** and sees saved expenses.
+
+The intended final CW2 demo flow is:
 
 1. Open app and show Welcome Screen
 2. Login through Firebase Authentication
@@ -192,12 +264,12 @@ The intended CW2 demo flow is:
 
 The CW2 phase is organised around three main technical responsibilities:
 
-| Team Member | Main Implementation | Main Packages / Files |
-|---|---|---|
-| Λάζαρος | Room local database and offline expense access | `data/local`, `ExpenseRepository`, `ExpenseViewModel`, `ExpenseUiState`, `HistoryScreen`, `AddExpenseScreen` |
-| Γιάννης | Biometric authentication | `data/security`, `LoginScreen`, `AuthViewModel`, `AuthUiState` |
-| Ιάσωνας | Retrofit external API integration | `data/remote`, `CurrencyRepository`, `CurrencyViewModel`, `CurrencyUiState`, `CurrencyRatesScreen`, navigation |
-| Όλοι | Integration, screenshots, testing, report, and viva | `docs`, README, report, PowerPoint, final build evidence |
+| Team Member | Main Implementation | Main Packages / Files | Status |
+|---|---|---|---:|
+| Λάζαρος | Room local database and offline expense access | `data/local`, `ExpenseRepository`, `ExpenseViewModel`, `ExpenseUiState`, `HistoryScreen`, `AddExpenseScreen` | ✅ Completed |
+| Γιάννης | Biometric authentication | `data/security`, `LoginScreen`, `AuthViewModel`, `AuthUiState` | Planned |
+| Ιάσωνας | Retrofit external API integration | `data/remote`, `CurrencyRepository`, `CurrencyViewModel`, `CurrencyUiState`, `CurrencyRatesScreen`, navigation | Planned |
+| Όλοι | Integration, screenshots, testing, report, and viva | `docs`, README, report, PowerPoint, final build evidence | In progress |
 
 The final CW2 project story is:
 
@@ -244,6 +316,36 @@ The `docs/cw2` folder stores:
 - testing screenshots
 - viva preparation evidence
 
+### Room Evidence Screenshots
+
+Room implementation evidence is stored in:
+
+```text
+docs/cw2/screenshots/room/
+```
+
+Current Room evidence includes:
+
+```text
+01_data_local_package.png
+02_room_database_code.png
+03_add_expense_form_filled.png
+03_add_expense_local_save_success.png
+04_history_local_data.png
+05_unit_test_success.png
+```
+
+Recommended report captions:
+
+| Screenshot | Suggested Caption |
+|---|---|
+| `01_data_local_package.png` | Room local storage package structure showing database, DAO, entity, and mapper classes. |
+| `02_room_database_code.png` | `SmartLedgerDatabase` configuration showing the Room database entity and DAO access. |
+| `03_add_expense_form_filled.png` | Add Expense form populated with test expense data for Room validation. |
+| `03_add_expense_local_save_success.png` | Successful local save and Firestore sync message after adding an expense. |
+| `04_history_local_data.png` | Expense History displaying the locally stored expense record. |
+| `05_unit_test_success.png` | Gradle unit test and clean build success after Room integration. |
+
 ---
 
 ## Jira / Kanban Workflow
@@ -264,13 +366,26 @@ The board is used to track:
 - report tasks
 - viva preparation tasks
 
+Room-specific Jira tasks completed during Day 2:
+
+```text
+ROOM-01 Add Room dependencies
+ROOM-02 Create ExpenseEntity
+ROOM-03 Create ExpenseDao
+ROOM-04 Create SmartLedgerDatabase
+ROOM-05 Create Expense mappers
+ROOM-06 Update ExpenseRepository for local storage
+ROOM-07 Update HistoryScreen for offline data
+ROOM-08 Add Room/offline screenshots
+```
+
 This provides evidence of organised project management and supports the final CW2 report.
 
 ---
 
 ## Testing Strategy
 
-The CW2 testing strategy will include:
+The CW2 testing strategy includes:
 
 - **Functional Testing:** checking whether each feature works as expected
 - **Black-box Testing:** testing the app from the user’s perspective
@@ -283,7 +398,20 @@ The test plan is maintained in:
 docs/cw2/test-plan.md
 ```
 
-Example planned test areas:
+Implemented Day 2 test evidence:
+
+```text
+app/src/test/java/com/smartledger/domain/usecase/SplitCalculationUseCaseTest.kt
+```
+
+The current unit test validates:
+
+```text
+totalAmount = 100, members = 4 → share = 25
+members = 0 → throws IllegalArgumentException
+```
+
+Example final CW2 test areas:
 
 - valid and invalid Firebase login
 - adding a valid expense
@@ -293,6 +421,21 @@ Example planned test areas:
 - offline history access
 - biometric success, cancel, and fallback cases
 - Retrofit API success and error/retry handling
+
+---
+
+## Build and Test Validation
+
+The Room integration has been validated with:
+
+```powershell
+.\gradlew test --no-configuration-cache
+.\gradlew clean build --no-configuration-cache
+```
+
+Both commands completed successfully during Day 2 validation.
+
+> Note: The project currently uses `android.disallowKotlinSourceSets=false` in `gradle.properties` as a compatibility workaround for AGP 9.1.0 built-in Kotlin and KSP-generated Room sources.
 
 ---
 
@@ -347,10 +490,16 @@ These diagrams support the architectural and functional explanation of the proto
 7. Run a clean build:
 
    ```powershell
-   .\gradlew clean build
+   .\gradlew clean build --no-configuration-cache
    ```
 
-8. Run the app on an emulator or Android device.
+8. Run unit tests:
+
+   ```powershell
+   .\gradlew test --no-configuration-cache
+   ```
+
+9. Run the app on an emulator or Android device.
 
 ---
 
@@ -396,6 +545,27 @@ The current prototype uses the following collection model:
 - `groups`
 - `splits`
 
+Room stores local expense records in the local `expenses` table through `ExpenseEntity`.
+
+---
+
+## Viva Defense Notes
+
+### Room / SQLite Local Storage — Λάζαρος
+
+> I implemented Room inside the `data/local` package to add local SQLite-based persistence for expenses. The app now saves an expense locally first and then attempts to sync it with Firestore. This means that the History screen can still display saved expenses even when cloud access is unavailable. I connected Room through `ExpenseRepository`, so the UI and ViewModel do not directly depend on the database. This keeps the architecture clean and supports offline access for financial records.
+
+Key points to explain:
+
+- why Room was selected for local storage
+- difference between Firestore and Room
+- how `ExpenseEntity` and `Expense` are mapped
+- how `ExpenseDao` exposes database operations
+- how `ExpenseRepository` coordinates Room and Firestore
+- how Add Expense provides local/cloud feedback
+- how History can display saved expense records
+- how the unit test supports business-logic correctness
+
 ---
 
 ## Why this project matters
@@ -405,6 +575,7 @@ SmartLedger demonstrates:
 - secure handling of user access
 - separation of UI and business logic
 - cloud-based storage of financial records
+- Room-based local storage for offline expense availability
 - equal bill splitting for group expenses
 - an extendable Android architecture suitable for further development
 - a clear transition from prototype design to tested final mobile application
@@ -425,7 +596,7 @@ Possible next steps beyond the CW2 scope include:
 - push notifications
 - dependency injection using Hilt
 - expanded UI and integration testing
-- production-ready sync strategy between Room and Firestore
+- WorkManager-based background sync strategy between Room and Firestore
 
 ---
 
