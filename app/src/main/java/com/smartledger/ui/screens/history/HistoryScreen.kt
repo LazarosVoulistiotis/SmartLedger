@@ -31,6 +31,12 @@ fun HistoryScreen(
 ) {
     val uiState by expenseViewModel.uiState.collectAsStateWithLifecycle()
 
+    /*
+      Loads expenses when the History screen opens.
+
+      The ViewModel asks the repository for expenses. The repository can return
+      Firestore data or fall back to Room data if cloud access is unavailable.
+    */
     LaunchedEffect(Unit) {
         expenseViewModel.loadMyExpenses()
     }
@@ -48,10 +54,19 @@ fun HistoryScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (uiState.errorMessage != null) {
+        uiState.errorMessage?.let {
             Text(
-                text = uiState.errorMessage ?: "",
+                text = it,
                 color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        uiState.localInfoMessage?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodySmall
             )
             Spacer(modifier = Modifier.height(12.dp))

@@ -26,16 +26,22 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.smartledger.ui.navigation.Screen
 import com.smartledger.ui.viewmodel.ExpenseViewModel
+import kotlinx.coroutines.delay
 
-@Composable // // Placeholder οθόνη για το add expense flow
+@Composable
 fun AddExpenseScreen(
     navController: NavController,
     expenseViewModel: ExpenseViewModel
 ) {
     val uiState by expenseViewModel.uiState.collectAsStateWithLifecycle()
 
+    /*
+      When an expense is saved, the screen briefly shows the local/cloud
+      feedback message before navigating to History.
+    */
     LaunchedEffect(uiState.successMessage) {
         if (uiState.successMessage != null) {
+            delay(1200)
             expenseViewModel.loadMyExpenses()
             navController.navigate(Screen.History.route) {
                 launchSingleTop = true
@@ -113,6 +119,15 @@ fun AddExpenseScreen(
             Text(
                 text = it,
                 color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        uiState.successMessage?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodySmall
             )
             Spacer(modifier = Modifier.height(12.dp))

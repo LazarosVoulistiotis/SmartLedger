@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 
     // Google Services plugin για ανάγνωση του google-services.json
     id("com.google.gms.google-services")
@@ -69,6 +70,11 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
 
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+
+    // Room local database για offline αποθήκευση εξόδων
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
